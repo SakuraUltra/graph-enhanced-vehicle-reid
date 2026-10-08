@@ -6,8 +6,8 @@
 [![PyTorch 2.0+](https://img.shields.io/badge/PyTorch-2.0+-ee4c2c.svg)](https://pytorch.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-> **Last Updated**: March 13, 2026  
-> **Project Status**: Active Development
+> **Documentation updated**: October 8, 2026
+> **Status**: Research code with selected archived experiment results
 
 ## 📋 Overview
 
@@ -24,9 +24,9 @@ Research questions include the effect of backbone choice, graph depth, graph top
 - **Dual Backbone Support**: ResNet50-IBN-a and ViT-Base with native 768-dim features
 - **Graph-Based Enhancement**: Multi-layer GCN/GAT for spatial relationship modeling
 - **Flexible Graph Construction**: Grid-based (4-neighbor, 8-neighbor) and k-NN dynamic graphs
-- **Exceptional Occlusion Robustness**: ViT models show **10.6% degradation** vs CNN's 18.8% at 30% occlusion
-- **Multi-Dataset Validation**: Comprehensive experiments on VeRi-776 and VehicleID datasets
-- **State-of-the-art Performance**: 74.7% mAP on VeRi-776, 89.2% on VehicleID-Small
+- **Occlusion Analysis**: Archived VeRi-776 measurements at 11 occlusion levels (0–30%)
+- **Two Dataset Workflows**: Training configurations for VeRi-776 and VehicleID
+- **Ablation Studies**: Compare backbone, graph depth, and graph topology; see source-linked results below
 
 ## 🚀 Quick Start
 
@@ -45,6 +45,8 @@ source venv_t4/bin/activate  # Linux/Mac
 # Install dependencies
 pip install -r requirements.txt
 ```
+
+Run all commands below from the repository root. The entrypoints select CUDA when available and otherwise use CPU; they do not select Apple MPS. Dependencies are not pinned to an exact reproducible environment.
 
 ### Dataset Preparation
 
@@ -76,22 +78,26 @@ pip install -r requirements.txt
 # └── attribute/
 ```
 
+Datasets and `.pth` checkpoints are not included in this repository. Obtain the datasets from their providers, then update `DATA.ROOT` in the chosen configuration.
+
 ### Training
+
+Check initialization before running: the training script loads a local baseline checkpoint from top-level `MODEL.PRETRAINED_PATH` when it exists. A missing file changes initialization. The ViT configuration instead places a path under `MODEL.BACKBONE.PRETRAINED_PATH`; that nested path is not consumed by the top-level checkpoint loader. ViT backbone initialization uses the configured `PRETRAINED` setting. Do not assume these two paths are interchangeable.
 
 **VeRi-776:**
 ```bash
-# Train ResNet50 + GCN (1 layer, 4-neighbor) - Best Clean Performance
+# Train ResNet50 + GCN (1 layer, 4-neighbor)
 python scripts/training/train_bot_gcn.py \
     --config configs/gcn_transformer_configs/abl_cnn_gcn_4nb_l1.yaml
 
-# Train ViT-Base + GCN (1 layer, 4-neighbor) - Best Robustness
+# Train ViT-Base + GCN (1 layer, 4-neighbor)
 python scripts/training/train_bot_gcn.py \
     --config configs/gcn_transformer_configs/abl_vit_gcn_4nb_l1.yaml
 ```
 
 **VehicleID:**
 ```bash
-# Train ResNet50 + kNN GCN (1 layer) - Best VehicleID Performance
+# Train ResNet50 + kNN GCN (1 layer)
 python scripts/training/train_bot_gcn.py \
     --config configs/gcn_transformer_configs/abl_vehicleid_cnn_gcn_knn_l1.yaml
 
@@ -102,58 +108,73 @@ python scripts/training/train_bot_gcn.py \
 
 ### Evaluation
 
-**VeRi-776 Occlusion Robustness:**
+**VeRi-776 occlusion evaluation:** prepare the clean dataset, the trained checkpoints listed in `ABLATION_MODELS` in the evaluator, and directories `query_00pct`, `query_03pct`, …, `query_30pct` beneath the occlusion root. Preserve the original VeRi query filenames. The prepared occlusion images and their generation script are not included in this checkout.
+
 ```bash
-# Evaluate all 8 models under 0-30% occlusion (11 levels)
 python scripts/testing/evaluate_occlusion_abl19.py \
-    --dataset_root data/dataset/776_DataSet \
-    --output_dir outputs/ablation_occlusion_results \
-    --device cuda:0
+    --occ_root outputs/occlusion_tests_v2 \
+    --output_dir outputs/ablation_occlusion_results_local
 ```
 
-**VehicleID Evaluation:**
+The script accepts `--occ_root` and `--output_dir`; the clean dataset path is the `DATASET_ROOT` constant in the script. It selects CUDA or CPU automatically. Its current model list contains **7 models**, omitting ABL-12, whereas the archive below contains **8 CSV files**. Missing checkpoints or occlusion directories are skipped; a successful process exit alone does not confirm complete evaluation. Use a new output directory to preserve the archive.
+
+**VehicleID-Small evaluation:** requires the standard `test_list_800.txt` split and the checkpoints listed in the VehicleID evaluator.
+
 ```bash
-# Evaluate on VehicleID-Small (800 IDs)
 python scripts/testing/evaluate_occlusion_vehicleid.py \
     --dataset_root data/dataset/VehicleID_V1.0 \
-    --output_dir outputs/ablation_vehicleID_occlusion_results \
+    --output_dir outputs/vehicleid_occlusion_results_local \
     --test_size small \
     --device cuda:0
 ```
 
+Current limitations:
+- The evaluator constructs `test_list_small.txt`, `test_list_medium.txt`, or `test_list_large.txt`, while standard VehicleID files use numeric suffixes. The dataset loader falls back to `test_list_800.txt` when the requested file is absent. With standard dataset filenames, **medium and large do not select their intended splits**. Only the small-set fallback is described here.
+- This evaluator applies random occlusion to both query and gallery. The VeRi evaluator uses prepared query images and a clean gallery, so their robustness protocols differ.
+- A seeded query/gallery split does not seed every random occlusion transform. The separate offline VehicleID image generator uses a different split procedure and is not a prerequisite for this evaluator.
+- Existing result CSV files may be reused by the evaluator. Choose a fresh output directory for a new run.
+
+See the [script guide](scripts/README.md) for available entrypoints and cluster setup notes. These commands were checked against the source; training and checkpoint-based evaluation have not been rerun for this documentation update.
+
 ## 📊 Results
 
-### VeRi-776 Performance
+### VeRi-776: archived occlusion-run snapshot
 
-#### Clean Performance
+Both tables use the **same eight individual CSV files** linked below. Clean performance is the `occlusion_level = 0` row, and Occ30 is the `occlusion_level = 30` row. These are saved measurements, not newly rerun experiments. The [older ablation report](docs/ablation/ABLATION_RESULTS_FINAL.md) records a separate historical result set and should not be mixed into this snapshot.
 
-| Model | Backbone | GCN Layers | mAP | Rank-1 | Rank-5 | Rank-10 |
-|-------|----------|------------|-----|--------|--------|---------|
-| ABL-01 | ResNet50-IBN | 1 | **74.69%** | 94.04% | 97.56% | 98.27% |
-| ABL-04 | ResNet50-IBN | 2 | 74.49% | 93.98% | 97.68% | 98.27% |
-| ABL-05 | ResNet50-IBN | 3 | 74.37% | 94.28% | 97.62% | 98.33% |
-| ABL-08 | ResNet50-IBN + kNN | 1 | 73.61% | 93.15% | 97.20% | 98.63% |
-| ABL-02 | ViT-Base-768 | 1 | 72.82% | 94.70% | 97.91% | 98.99% |
-| ABL-11 | ViT-Base-768 | 2 | **72.71%** | 93.92% | 97.56% | 98.81% |
-| ABL-12 | ViT-Base-768 | 3 | 72.44% | 93.86% | 97.79% | 98.93% |
-| ABL-15 | ViT-Base + kNN | 1 | 72.67% | 94.28% | 97.74% | 98.87% |
+#### Clean performance
 
-#### Occlusion Robustness (30% Random Erasing)
+| Model / source CSV | Backbone | GCN layers | mAP | Rank-1 | Rank-5 | Rank-10 |
+|---|---|---:|---:|---:|---:|---:|
+| [ABL-01](outputs/ablation_occlusion_results/individual_results/ABL01_CNN_4nb_L1.csv) | ResNet50-IBN | 1 | 74.52% | 93.62% | 97.26% | 98.09% |
+| [ABL-04](outputs/ablation_occlusion_results/individual_results/ABL04_CNN_4nb_L2.csv) | ResNet50-IBN | 2 | 74.20% | 94.22% | 97.14% | 98.57% |
+| [ABL-05](outputs/ablation_occlusion_results/individual_results/ABL05_CNN_4nb_L3.csv) | ResNet50-IBN | 3 | 74.37% | 94.28% | 97.62% | 98.33% |
+| [ABL-08](outputs/ablation_occlusion_results/individual_results/ABL08_CNN_kNN_L1.csv) | ResNet50-IBN + kNN | 1 | 73.61% | 93.15% | 97.20% | 98.63% |
+| [ABL-02](outputs/ablation_occlusion_results/individual_results/ABL02_ViT_4nb_L1.csv) | ViT-Base-768 | 1 | 72.82% | 94.70% | 97.91% | 98.99% |
+| [ABL-11](outputs/ablation_occlusion_results/individual_results/ABL11_ViT_4nb_L2.csv) | ViT-Base-768 | 2 | 72.34% | 93.92% | 97.56% | 98.81% |
+| [ABL-12](outputs/ablation_occlusion_results/individual_results/ABL12_ViT_4nb_L3.csv) | ViT-Base-768 | 3 | 72.40% | 94.04% | 97.20% | 98.51% |
+| [ABL-15](outputs/ablation_occlusion_results/individual_results/ABL15_ViT_kNN_L1.csv) | ViT-Base + kNN | 1 | 72.67% | 94.28% | 97.74% | 98.87% |
 
-| Model | Clean mAP | Occ30 mAP | Absolute Drop | Relative Drop |
-|-------|-----------|-----------|---------------|---------------|
-| **CNN Models** | | | | |
-| ABL-01 (L1) | 74.69% | 64.71% | 9.98% | **13.4%** |
-| ABL-04 (L2) | 74.49% | 64.67% | 9.82% | 13.2% |
-| ABL-05 (L3) | 74.37% | 65.09% | 9.28% | 12.5% |
-| ABL-08 (kNN L1) | 73.61% | 63.64% | 9.97% | 13.5% |
-| **ViT Models** | | | | |
-| ABL-02 (L1) | 72.82% | 65.13% | 7.69% | **10.6%** ⭐ |
-| ABL-11 (L2) | 72.71% | 64.76% | 7.95% | 10.9% |
-| ABL-12 (L3) | 72.44% | 64.11% | 8.33% | 11.5% |
-| ABL-15 (kNN L1) | 72.67% | 64.91% | 7.76% | 10.7% |
+#### Performance at the archived 30% occlusion level
+
+| Model | Clean mAP | Occ30 mAP | Absolute drop (pp) | Relative drop |
+|---|---:|---:|---:|---:|
+| ABL-01 | 74.52% | 64.71% | 9.81 | 13.16% |
+| ABL-04 | 74.20% | 64.67% | 9.53 | 12.85% |
+| ABL-05 | 74.37% | 65.09% | 9.28 | 12.47% |
+| ABL-08 | 73.61% | 63.64% | 9.98 | 13.55% |
+| ABL-02 | 72.82% | 65.13% | 7.69 | 10.56% |
+| ABL-11 | 72.34% | 64.76% | 7.58 | 10.47% |
+| ABL-12 | 72.40% | 64.86% | 7.53 | 10.41% |
+| ABL-15 | 72.67% | 64.91% | 7.76 | 10.68% |
+
+`Absolute drop = clean mAP − Occ30 mAP` in **percentage points (pp)**. `Relative drop = 100 × (clean mAP − Occ30 mAP) / clean mAP`. Calculations use unrounded CSV values; displayed values are rounded to two decimals.
+
+In this snapshot, ABL-01 has the highest clean mAP (74.52%), ABL-02 has the highest Occ30 mAP (65.13%), and ABL-12 has the smallest relative drop (10.41%). Among CNN variants, ABL-05 has the highest Occ30 mAP (65.09%). These are different criteria; no single graph depth wins every comparison. The archive does not establish statistical significance or state-of-the-art performance.
 
 ### VehicleID-Small Performance
+
+**Historical README figures:** retained from the original report. The corresponding raw VehicleID result CSV files and checkpoints are not included, so these values have not been independently verified in this update. They are not part of the source-linked VeRi snapshot above.
 
 | Model | Backbone | GCN Layers | mAP | Rank-1 | Rank-5 | Params |
 |-------|----------|------------|-----|--------|--------|--------|
@@ -167,12 +188,6 @@ python scripts/testing/evaluate_occlusion_vehicleid.py \
 | VID-06 | ViT-Base | 2 | 86.87% | 94.65% | 97.38% | 136.1M |
 | VID-07 | ViT-Base | 3 | 85.23% | 93.71% | 96.89% | 137.0M |
 | VID-08 | ViT-Base + kNN | 1 | **89.18%** | 95.94% | 98.01% | 135.2M |
-
-**Key Findings:**
-- ✅ **ViT-Base shows 25% better occlusion robustness than CNN** (10.6% vs 13.4% degradation)
-- ✅ **1-layer GCN is optimal for both backbones** (best clean + robust performance)
-- ✅ **k-NN graph construction improves VehicleID performance** (89.18% vs 89.04%)
-- ⚠️ **Deeper GCN (L3) shows over-smoothing** especially on VehicleID ViT models
 
 ## 🏗️ Architecture
 
@@ -200,62 +215,30 @@ ID Loss + Triplet Loss
 
 ## 📂 Project Structure
 
-```
+```text
 graph-enhanced-vehicle-reid/
-├── configs/                    # Configuration files
-│   ├── baseline_configs/       # Baseline model configs
-│   ├── gcn_transformer_configs/# GCN-enhanced configs
-│   ├── datasets/               # Dataset configurations
-│   └── augmentation/           # Data augmentation configs
-├── data/                       # Dataset directory
-│   └── dataset/776_DataSet/    # VeRi-776 dataset
-├── models/                     # Model implementations
-│   ├── backbones/              # ResNet, ViT backbones
-│   ├── gcn/                    # GCN/GAT modules
-│   ├── fusion/                 # Feature fusion strategies
-│   └── bot_baseline/           # Bag-of-Tricks baseline
-├── train/                      # Training utilities
-│   ├── trainer.py              # Main trainer class
-│   └── scheduler.py            # Learning rate schedulers
-├── eval/                       # Evaluation tools
-│   └── evaluator.py            # ReID evaluator
-├── losses/                     # Loss functions
-│   ├── id_loss.py              # Cross-entropy loss
-│   ├── triplet_loss.py         # Triplet loss
-│   └── combined_loss.py        # Combined loss
-├── scripts/                    # Training & testing scripts
-│   ├── training/               # Training scripts
-│   ├── testing/                # Evaluation scripts
-│   └── experiments/            # Experiment scripts
-├── outputs/                    # Training outputs
-│   ├── ablation/               # Ablation study results
-│   └── ablation_occlusion_results/  # Occlusion evaluation
-├── docs/                       # Documentation
-│   ├── augmentation/           # Augmentation docs
-│   └── occlusion_testing/      # Occlusion testing docs
-└── notebooks/                  # Jupyter notebooks
-    ├── data_analysis.ipynb     # Dataset analysis
-    └── result_visualization.ipynb  # Result visualization
+├── configs/                  # Baseline, graph model, dataset and augmentation configs
+├── models/                   # Backbones, graph modules, fusion and BoT models
+├── train/                    # Training utilities and schedulers
+├── eval/                     # Retrieval evaluation
+├── losses/                   # Identification and triplet losses
+├── utils/                    # Sampling, augmentation, metrics and reproducibility
+├── scripts/                  # Training, evaluation, graph preparation and SLURM jobs
+├── experiments/              # Historical stage-specific notes
+├── docs/ablation/            # Earlier ablation report and CSV
+├── outputs/                  # Selected committed CSVs and training logs
+└── requirements.txt
 ```
+
+Datasets and model checkpoints must be supplied separately; generated output directories shown in configuration files may not yet exist.
 
 ## 🔬 Ablation Studies
 
-### CNN Depth Ablation (ABL-03 to ABL-06)
-- **Objective**: Determine optimal GCN depth for ResNet50 backbone
-- **Settings**: 4-neighbor adjacency, layers = {1, 2, 3}
-- **Conclusion**: L1 achieves best clean performance; L2 offers best trade-off
-
-### ViT Depth Ablation (ABL-10 to ABL-13)
-- **Objective**: Determine optimal GCN depth for ViT-Base backbone
-- **Settings**: 4-neighbor adjacency, layers = {1, 2, 3}
-- **Conclusion**: **L2 is optimal** (best clean + robustness); L3 shows over-smoothing
-
-### Graph Topology Comparison (ABL-07 to ABL-09, ABL-14 to ABL-16)
-- **4-neighbor**: Standard grid connections
-- **8-neighbor**: Diagonal connections included
-- **k-NN (k=8)**: Dynamic feature-based connections
+The archived VeRi comparison covers CNN depth (ABL-01/04/05), ViT depth (ABL-02/11/12), and one-layer k-NN variants (ABL-08/15). The implementation also supports 8-neighbor graphs, but they are not represented in the eight CSVs summarized here. Lower retrieval scores alone do not establish over-smoothing as their cause.
 
 ## 📈 Training Details
+
+The following settings describe the historical experiment report. Consult each YAML configuration for the settings of a new run; runtimes depend on hardware and data access.
 
 ### Hardware & Environment
 - **GPU**: NVIDIA H100 PCIe (80GB VRAM)
@@ -284,28 +267,27 @@ graph-enhanced-vehicle-reid/
 
 ### Data Augmentation
 - **Training**: Random Horizontal Flip + Random Erasing (p=0.5, area=2%-20%, r ∈ [0.3, 3.3])
-- **Occlusion Testing**: Random Erasing with **fixed seed (VehicleID only)** for reproducibility
+- **Occlusion Testing**: Dataset-specific protocols; see evaluation limitations above. A fully seeded occlusion rerun is not established by the committed scripts.
 - **Resize**: 256×256 (CNN), 224×224 (ViT)
 - **Normalization**: ImageNet statistics
 
 ## 🔬 Experiment Reproduction
 
-All experiments can be reproduced using provided configuration files:
+Configurations and scripts provide starting points for reruns, subject to the dataset, checkpoint, initialization, and evaluator limitations above.
 
-**VeRi-776 Ablation Study (8 models):**
+**VeRi-776: individual cluster jobs**
 ```bash
-# See scripts/experiments/ablation/ for individual training scripts
-# Or use batch submission:
-sbatch scripts/experiments/ablation/run_ablation_study.sh
+sbatch scripts/experiments/ablation/run_abl_cnn_4nb_l1.sh
+sbatch scripts/experiments/ablation/run_abl_vit_4nb_l1.sh
 ```
 
-**VehicleID Ablation Study (8 models):**
+**VehicleID: individual cluster jobs**
 ```bash
-# Individual model training:
 sbatch scripts/experiments/ablation/run_vid_cnn_4nb_l1.sh
 sbatch scripts/experiments/ablation/run_vid_vit_4nb_l1.sh
-# ... (see scripts/experiments/ablation/ for all 8 models)
 ```
+
+Before submitting, edit cluster-specific working directories, environment activation, partitions, and GPU requests. Some scripts retain the original `/users/sl3753/scratch/GCN_project` checkout path; renaming the GitHub repository does not rename a cluster checkout. For local runs, use the Python training commands above instead of `sbatch`.
 
 **Pre-trained Weights:** Available upon request (contact via GitHub Issues)
 
@@ -345,4 +327,4 @@ For questions, collaboration, or pre-trained weights:
 
 ⭐ **If you find this work helpful, please star this repository!**
 
-**Last Updated**: March 13, 2026 | **Project Status**: ✅ Complete Experiments
+**Documentation updated**: October 8, 2026 | Selected experiment results archived
