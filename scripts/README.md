@@ -42,7 +42,7 @@ python scripts/testing/evaluate_occlusion_vehicleid.py \
 
 The VeRi evaluator accepts only `--occ_root` and `--output_dir`; change its `DATASET_ROOT` constant if the clean dataset is elsewhere. It expects `query_00pct` through `query_30pct` in increments of 3, with original VeRi filenames, and skips unavailable checkpoints/directories. Prepared VeRi occlusion images and their generator are not included. Its current list omits ABL-12 even though that model has an archived CSV.
 
-The VehicleID evaluator currently requests textual split filenames such as `test_list_small.txt`, while standard files are named `test_list_800.txt`, `test_list_1600.txt`, and `test_list_2400.txt`. Missing files trigger a fallback to the 800-ID split; **do not interpret medium/large runs as correctly selecting those splits**. The small command above relies on that fallback with a standard dataset layout. The training script has a separate numeric mapping.
+The VehicleID evaluator maps `--test_size small`, `medium`, and `large` to `test_list_800.txt`, `test_list_1600.txt`, and `test_list_2400.txt`. It checks the requested file before creating outputs or reusing result CSVs, and fails if it is absent. Older versions could silently evaluate the 800-ID split for medium/large; use a fresh output directory when rerunning affected evaluations.
 
 VehicleID applies random occlusion to both query and gallery; VeRi uses prepared occluded queries and a clean gallery. Split seeding alone does not make random occlusion fully reproducible. The offline VehicleID generator is not required by the on-the-fly evaluator and uses a different query/gallery split. Use a fresh output directory for new evaluations so existing CSVs are neither overwritten nor reused.
 
@@ -70,3 +70,7 @@ sbatch scripts/experiments/ablation/run_vid_vit_4nb_l1.sh
 Adapt the working directory, environment activation, SLURM partition, and GPU requests to your cluster. Paths containing `/users/sl3753/scratch/GCN_project` refer to the original cluster checkout; a repository rename does not update that local directory. Cluster setup examples are in `scripts/setup/`. Local training uses the Python entrypoints directly and does not require SLURM.
 
 These instructions were checked against the committed entrypoints. They are not evidence of a fresh training or checkpoint-based evaluation run.
+
+## Split-selection regression checks
+
+Run `python -m unittest discover -s tests -v` from the repository root. These filesystem-based tests require only the Python standard library; they do not run model inference.

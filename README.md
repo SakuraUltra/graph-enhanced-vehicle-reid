@@ -129,7 +129,7 @@ python scripts/testing/evaluate_occlusion_vehicleid.py \
 ```
 
 Current limitations:
-- The evaluator constructs `test_list_small.txt`, `test_list_medium.txt`, or `test_list_large.txt`, while standard VehicleID files use numeric suffixes. The dataset loader falls back to `test_list_800.txt` when the requested file is absent. With standard dataset filenames, **medium and large do not select their intended splits**. Only the small-set fallback is described here.
+- `--test_size small`, `medium`, and `large` select `test_list_800.txt`, `test_list_1600.txt`, and `test_list_2400.txt`, respectively. The evaluator stops with an explicit error if the selected file is missing. Older versions could fall back to the 800-ID split; rerun any affected medium/large evaluations in a fresh output directory.
 - This evaluator applies random occlusion to both query and gallery. The VeRi evaluator uses prepared query images and a clean gallery, so their robustness protocols differ.
 - A seeded query/gallery split does not seed every random occlusion transform. The separate offline VehicleID image generator uses a different split procedure and is not a prerequisite for this evaluator.
 - Existing result CSV files may be reused by the evaluator. Choose a fresh output directory for a new run.
