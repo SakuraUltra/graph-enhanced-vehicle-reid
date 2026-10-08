@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 540" role="img" aria-labelledby="title desc">
+  <title id="title">Graph-enhanced vehicle re-identification</title>
+  <desc id="desc">A conceptual workflow: a vehicle image passes through a CNN or Vision Transformer, with global and graph feature branches fused into an embedding for cross-camera vehicle retrieval. This is an illustration, not an inference result.</desc>
+  <defs>
+    <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#0b1426"/><stop offset="1" stop-color="#142a43"/></linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#55dbc1"/></marker>
+    <g id="car"><path d="M4 28h12l13-18h44l15 18h13v26H4z" fill="#55dbc1"/><path d="M34 16h32l10 12H24z" fill="#17364b"/><circle cx="25" cy="53" r="10" fill="#0b1426" stroke="#a9c8dd" stroke-width="3"/><circle cx="80" cy="53" r="10" fill="#0b1426" stroke="#a9c8dd" stroke-width="3"/></g>
+    <style>text{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif}.label{font-size:18px;fill:#e4effb;font-weight:600}.small{font-size:15px;fill:#a9bfd3}.line{stroke:#55dbc1;stroke-width:2;fill:none;marker-end:url(#arrow)}</style>
+  </defs>
+  <rect width="1200" height="540" rx="24" fill="url(#bg)"/>
+  <text x="48" y="52" font-size="15" font-weight="700" letter-spacing="3" fill="#55dbc1">GRAPH-ENHANCED VEHICLE RE-ID</text>
+  <text x="48" y="106" font-size="42" font-weight="750" fill="#fff">One vehicle. Different cameras.</text>
+  <text x="48" y="143" font-size="20" fill="#b6cbe0">Explore CNN + ViT backbones, spatial graphs, and occlusion robustness.</text>
+  <rect x="48" y="202" width="170" height="214" rx="16" fill="#172d45" stroke="#35516c"/>
+  <text x="70" y="238" class="label">Vehicle image</text><use href="#car" x="80" y="275"/>
+  <text x="76" y="389" class="small">Query / camera A</text>
+  <path d="M220 309h34" class="line"/>
+  <rect x="266" y="255" width="178" height="110" rx="14" fill="#172d45" stroke="#35516c"/>
+  <text x="290" y="292" class="label">CNN or ViT</text><text x="291" y="323" class="small">Spatial features</text><text x="290" y="347" class="small">ResNet-IBN / ViT</text>
+  <path d="M446 309h22V246h30" class="line"/><path d="M468 309v64h30" class="line"/>
+  <rect x="510" y="211" width="228" height="72" rx="14" fill="#173f4c" stroke="#55dbc1"/>
+  <text x="554" y="242" class="label">Global branch</text><text x="551" y="266" class="small">Whole-image features</text>
+  <rect x="510" y="321" width="228" height="95" rx="14" fill="#263356" stroke="#9aaaff"/>
+  <path d="M530 351h26v26h-26z M530 351l26 26 M556 351l-26 26" stroke="#9aaaff" fill="none"/>
+  <g fill="#c2ccff"><circle cx="530" cy="351" r="4"/><circle cx="556" cy="351" r="4"/><circle cx="530" cy="377" r="4"/><circle cx="556" cy="377" r="4"/></g>
+  <text x="577" y="354" class="label">Graph branch</text><text x="577" y="379" class="small">GCN / GAT</text><text x="577" y="401" class="small">Spatial relationships</text>
+  <path d="M740 246h25v64h22" class="line"/><path d="M740 374h25v-64" stroke="#55dbc1" stroke-width="2" fill="none"/>
+  <rect x="799" y="260" width="139" height="100" rx="14" fill="#172d45" stroke="#35516c"/>
+  <text x="837" y="298" class="label">Fuse</text><text x="824" y="329" class="small">Embedding</text>
+  <path d="M940 309h30" class="line"/>
+  <rect x="982" y="202" width="170" height="214" rx="16" fill="#172d45" stroke="#35516c"/>
+  <text x="1006" y="238" class="label">Rank gallery</text><use href="#car" transform="translate(1007 273) scale(1.02)"/>
+  <text x="1003" y="389" class="small">Across cameras</text>
+  <path d="M48 455h1104" stroke="#35516c"/>
+  <text x="48" y="492" font-size="17" fill="#c2d5e8">PyTorch · Vehicle Re-ID · VeRi-776 · VehicleID · Image retrieval</text>
+  <text x="48" y="518" font-size="13" fill="#90a9bf">Conceptual workflow illustration — see the README for archived results and reproduction requirements.</text>
+</svg>
