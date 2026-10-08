@@ -1,6 +1,6 @@
-# Graph-Enhanced Transformer for Robust Vehicle Re-Identification
+# Graph-Enhanced Vehicle Re-Identification
 
-**Official PyTorch implementation of GCN-enhanced Vision Transformer for Vehicle Re-ID**
+**A PyTorch research project comparing graph-enhanced CNN and Vision Transformer models for vehicle re-identification.**
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![PyTorch 2.0+](https://img.shields.io/badge/PyTorch-2.0+-ee4c2c.svg)](https://pytorch.org/)
@@ -11,7 +11,13 @@
 
 ## 📋 Overview
 
-This repository presents a novel approach to vehicle re-identification by integrating Graph Convolutional Networks (GCNs) with Vision Transformers (ViT). Our method enhances spatial relationship modeling and demonstrates **superior robustness against occlusions**, particularly for ViT-based models.
+Vehicle re-identification retrieves images of the same vehicle across different cameras. This project studies how graph-based spatial feature modeling affects retrieval accuracy and robustness under synthetic occlusion.
+
+The implementation combines a global feature branch with a GCN or GAT branch built from spatial image features. It supports both **ResNet50-IBN-a** and **Vision Transformer (ViT)** backbones, with experiments on **VeRi-776** and **VehicleID**.
+
+Research questions include the effect of backbone choice, graph depth, graph topology, pooling, and feature fusion. The repository includes model implementations, training configurations, evaluation scripts, and selected experiment outputs.
+
+> Previously named `GCN_project`. The name `graph-enhanced-vehicle-reid` makes the application and the graph-enhanced approach explicit while covering both CNN and ViT experiments.
 
 ### Key Features
 
@@ -28,8 +34,8 @@ This repository presents a novel approach to vehicle re-identification by integr
 
 ```bash
 # Clone the repository
-git clone https://github.com/SakuraUltra/GCN_project.git
-cd GCN_project
+git clone https://github.com/SakuraUltra/graph-enhanced-vehicle-reid.git
+cd graph-enhanced-vehicle-reid
 
 # Create virtual environment
 python -m venv venv_t4
@@ -195,7 +201,7 @@ ID Loss + Triplet Loss
 ## 📂 Project Structure
 
 ```
-GCN_project/
+graph-enhanced-vehicle-reid/
 ├── configs/                    # Configuration files
 │   ├── baseline_configs/       # Baseline model configs
 │   ├── gcn_transformer_configs/# GCN-enhanced configs
@@ -332,8 +338,8 @@ This project is licensed under the MIT License.
 
 For questions, collaboration, or pre-trained weights:
 - Email: sl3753@york.ac.uk
-- GitHub Issues: [Create an issue](https://github.com/SakuraUltra/GCN_project/issues)
-- Repository: [https://github.com/SakuraUltra/GCN_project](https://github.com/SakuraUltra/GCN_project)
+- GitHub Issues: [Create an issue](https://github.com/SakuraUltra/graph-enhanced-vehicle-reid/issues)
+- Repository: [https://github.com/SakuraUltra/graph-enhanced-vehicle-reid](https://github.com/SakuraUltra/graph-enhanced-vehicle-reid)
 
 ---
 
