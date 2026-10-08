@@ -24,6 +24,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from models.bot_baseline.bot_gcn_model import BoTGCN
 from models.bot_baseline.veri_dataset import VehicleIDDataset, split_vehicleid_test, build_transforms
 from eval.evaluator import compute_mAP_cmc
+from utils.vehicleid_splits import VEHICLEID_TEST_LISTS, resolve_vehicleid_test_list
 
 
 def load_checkpoint_safe(model, checkpoint_path):
@@ -303,6 +304,8 @@ def extract_features(model, dataloader, device):
 def evaluate_model_with_occlusion(model_cfg, dataset_root, occlusion_level, device, test_size="small"):
     """评估单个模型在指定遮挡级别下的性能"""
     
+    test_list_name = resolve_vehicleid_test_list(dataset_root, test_size)
+
     # 创建数据增强（包含 Random Erasing）
     input_size = model_cfg["input_size"]
     
@@ -325,7 +328,6 @@ def evaluate_model_with_occlusion(model_cfg, dataset_root, occlusion_level, devi
         occlusion_transform = base_transform
     
     # 使用 split_vehicleid_test 分割测试集
-    test_list_name = f"test_list_{test_size}.txt"
     query_data, gallery_data = split_vehicleid_test(dataset_root, test_list_name)
     
     # 创建 query 和 gallery 数据集
@@ -405,9 +407,16 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset_root", default="data/dataset/VehicleID_V1.0")
     parser.add_argument("--output_dir", default="outputs/ablation_occlusion_results_vehicleid")
-    parser.add_argument("--test_size", default="small", choices=["small", "medium", "large"])
+    parser.add_argument("--test_size", default="small", choices=list(VEHICLEID_TEST_LISTS))
     parser.add_argument("--device", default="cuda:0")
     args = parser.parse_args()
+
+    # Validate before creating outputs or reusing existing result CSVs.
+    try:
+        test_list_name = resolve_vehicleid_test_list(args.dataset_root, args.test_size)
+    except (ValueError, FileNotFoundError) as exc:
+        parser.error(str(exc))
+    print(f"📄 Split file: {test_list_name}")
     
     # 创建输出目录
     output_dir = Path(args.output_dir)
