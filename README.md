@@ -1,6 +1,14 @@
 # Graph-Enhanced Vehicle Re-Identification
 
-**A PyTorch research project comparing graph-enhanced CNN and Vision Transformer models for vehicle re-identification.**
+**Vehicle Re-ID with Graph Neural Networks and Vision Transformers in PyTorch.**
+
+[English](README.md) · [简体中文](README.zh-CN.md) · [Quick start](#-quick-start) · [Results & source data](#-results) · [Script guide](scripts/README.md)
+
+![Vehicle Re-ID workflow: CNN or ViT features feed global and graph branches, followed by feature fusion and cross-camera image retrieval.](assets/vehicle-reid-overview.svg)
+
+Find the same vehicle across camera views. Explore how **GCN/GAT spatial graphs**, **ResNet-IBN**, and **Vision Transformer (ViT)** features affect vehicle image retrieval and robustness to synthetic occlusion on **VeRi-776** and **VehicleID**.
+
+**中文简介：** 基于图神经网络与视觉 Transformer 的车辆重识别（Vehicle Re-ID）研究项目，面向跨摄像头车辆检索，比较 CNN/ViT、图卷积网络（GCN）、图注意力网络（GAT）与遮挡鲁棒性。
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![PyTorch 2.0+](https://img.shields.io/badge/PyTorch-2.0+-ee4c2c.svg)](https://pytorch.org/)
@@ -18,6 +26,14 @@ The implementation combines a global feature branch with a GCN or GAT branch bui
 Research questions include the effect of backbone choice, graph depth, graph topology, pooling, and feature fusion. The repository includes model implementations, training configurations, evaluation scripts, and selected experiment outputs.
 
 > Previously named `GCN_project`. The name `graph-enhanced-vehicle-reid` makes the application and the graph-enhanced approach explicit while covering both CNN and ViT experiments.
+
+### Explore the project
+
+- **Compare backbones:** CNN vs Vision Transformer for cross-camera vehicle retrieval.
+- **Study spatial relationships:** GCN vs GAT, grid vs k-NN graphs, and graph depth.
+- **Inspect robustness:** eight archived VeRi-776 CSVs spanning 0–30% synthetic occlusion, with source-linked mAP and CMC results below.
+
+The figure illustrates the model workflow. A live image-upload retrieval demo and pretrained checkpoints are not bundled; the quick start explains the required datasets and weights.
 
 ### Key Features
 
@@ -315,6 +331,12 @@ This project is licensed under the MIT License.
 - **PyTorch**: Deep learning framework
 - **Timm Library**: ViT-Base pre-trained weights
 - **ResNet-IBN**: IBN-Net architecture for domain generalization
+
+## 🤝 Contributing
+
+Useful contributions include reproducible occlusion generation, stronger checkpoint-loading validation, and dataset-free regression tests. Open an issue with the command, configuration, expected behavior, and observed behavior so a fix can be verified. For experimental comparisons, include the dataset split and evaluation protocol alongside mAP / Rank-1.
+
+If this project helps your vehicle Re-ID research, a star makes it easier to find again. Share the repository with researchers working on vehicle retrieval, graph neural networks, or robust visual representations.
 
 ## 📧 Contact
 
